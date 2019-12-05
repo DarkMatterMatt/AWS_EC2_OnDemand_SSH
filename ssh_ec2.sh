@@ -100,19 +100,27 @@ host=$($HOST_QUERY) || exit 6
 # wait for instance to start
 printf 'Waiting for instance to start...'
 state=$($STATE_QUERY) || exit 7
-while [[ $state != "running" ]]; do
-    sleep 2
-    printf '.'
-    state=$($STATE_QUERY) || exit 7
-done
-echo ' done!'
 
-# ssh into instance
-echo 'Waiting 10 secs for SSH to start...'
-sleep 10
+if [[ $state != "running" ]]; then
+    while [[ $state != "running" ]]; do
+        sleep 2
+        printf '.'
+        state=$($STATE_QUERY) || exit 7
+    done
+    echo ' done!'
+
+    # ssh into instance
+    echo 'Waiting 10 secs for SSH to start...'
+    sleep 10
+else
+    echo ''
+fi
 
 echo 'Running SSH...'
-ssh "$sshUser@$host" $sshIdentity "$sshArgs" || exit 8
+for i in 1 2 3 4 5; do
+    ssh "$sshUser@$host" $sshIdentity "$sshArgs" && break
+    sleep 3
+done
 
 # stop instance
 echo 'You have 3 seconds to cancel the EC2 shutdown... Press CTRL+C to cancel!'
