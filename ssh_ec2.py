@@ -1,4 +1,4 @@
-#!/bin/usr/env python3
+#!/usr/bin/env python3
 # defaults: user = ec2-user; identity = the SSH default
 # example: ./ssh_ec2.sh i-12345678912345678 -u myUser -i ~/.ssh/myIdentity.pem
 # example: ./ssh_ec2.sh i-12345678912345678 -u myUser -i ~/.ssh/myIdentity.pem --sshargs '-o StrictHostKeyChecking no'
