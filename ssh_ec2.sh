@@ -84,14 +84,24 @@ if [[ $instanceId == "unset" ]]; then
 fi
 
 #################################################
+if hash aws2 2>/dev/null; then
+    aws="aws2"
+elif hash aws 2>/dev/null; then
+    aws="aws"
+else
+    echo "Missing aws2 command. Please install it and add it to your path"
+    exit 10
+fi
 
-QUERY="aws2 ec2 describe-instances --output text --instance-ids $instanceId --query Reservations[*].Instances[*]."
+START="$aws ec2 start-instances --instance-ids $instanceId > /dev/null"
+QUERY="$aws ec2 describe-instances --output text --instance-ids $instanceId --query Reservations[*].Instances[*]."
+STOP="$aws ec2 stop-instances --instance-ids $instanceId > /dev/null"
 HOST_QUERY="$QUERY{Instance:PublicDnsName}"
 STATE_QUERY="$QUERY{Instance:State.Name}"
 
 # start instance
 echo 'Starting instance...'
-aws2 ec2 start-instances --instance-ids $instanceId > /dev/null || exit 5
+eval $START || exit 5
 
 # get ip address
 echo 'Fetching hostname...'
@@ -105,7 +115,7 @@ if [[ $state != "running" ]]; then
     while [[ $state != "running" ]]; do
         sleep 2
         printf '.'
-        state=$($STATE_QUERY) || exit 7
+        state=$($STATE_QUERY) || exit 8
     done
     echo ' done!'
 
@@ -125,6 +135,5 @@ done
 # stop instance
 echo 'You have 3 seconds to cancel the EC2 shutdown... Press CTRL+C to cancel!'
 sleep 3
-
 echo 'Stopping instance...'
-aws2 ec2 stop-instances --instance-ids $instanceId > /dev/null || exit 9
+eval $STOP || exit 9
