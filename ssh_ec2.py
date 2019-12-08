@@ -7,6 +7,7 @@ import argparse
 import boto3
 import os
 import subprocess
+import sys
 from time import sleep
 
 def start(ec2, instance_id):
@@ -24,10 +25,15 @@ def get_state(ec2, instance_id):
     return response["Reservations"][0]["Instances"][0]["State"]["Name"]
 
 def flush_dns():
-    # Windows needs to flush DNS to get the new DDNS ip
-    if os.name == "nt":
+    # Needs to flush DNS to get the new DDNS ip
+    if sys.platform == "win32":
         print("** Flushing DNS cache")
-        subprocess.call(f"ipconfig /flushdns", stdout=subprocess.DEVNULL)
+        subprocess.call("ipconfig /flushdns", shell=True, stdout=subprocess.DEVNULL)
+
+    #elif sys.platform == "darwin":
+    #    subprocess.call("sudo killall -HUP mDNSResponder", shell=True, stdout=subprocess.DEVNULL)
+    #    subprocess.call("sudo killall mDNSResponderHelper", shell=True, stdout=subprocess.DEVNULL)
+    #    subprocess.call("sudo dscacheutil -flushcache", shell=True, stdout=subprocess.DEVNULL)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -77,7 +83,7 @@ def main():
     print("** Running SSH")
     for i in range(5):
         flush_dns()
-        return_code = subprocess.call(f"ssh  -o ConnectTimeout=3 -o ConnectionAttempts=1 {user}@{dns} {identity} {ssh_args}")
+        return_code = subprocess.call(f"ssh  -o ConnectTimeout=5 -o ConnectionAttempts=1 {user}@{dns} {identity} {ssh_args}", shell=True)
         if return_code == 0:
             break
         sleep(3)
