@@ -89,7 +89,7 @@ def main():
         sleep(3)
 
     # stop instance
-    print("** You have 3 seconds to cancel the EC2 shutdown, press CTRL+C to cancel!")
+    print("** You have 3 seconds to cancel the EC2 shutdown, press CTRL+C to cancel!", flush=True)
     try:
         sleep(3)
         print("** Stopping instance...")
